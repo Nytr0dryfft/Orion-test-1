@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ORION — Repertório de alarmes</title>
+  <meta name="theme-color" content="#11131a">
+  <style>
+    :root {
+      --bg:#0c0e13; --panel:#151922; --panel2:#1b202b; --text:#f3f4f7;
+      --muted:#9ba3b4; --line:#2b3240; --accent:#a9b8ff; --accent2:#d6dcff;
+    }
+    * { box-sizing:border-box }
+    body {
+      margin:0; min-height:100vh; color:var(--text);
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+      background:radial-gradient(ellipse at 50% -15%,#29334b 0%,transparent 48%),var(--bg);
+    }
+    .wrap { width:min(100% - 32px,1000px); margin:0 auto; padding:34px 0 56px }
+    header { display:flex; justify-content:space-between; align-items:center; gap:20px; margin-bottom:42px }
+    .brand { display:flex; align-items:center; gap:12px; letter-spacing:.22em; font-size:13px; font-weight:700 }
+    .orb { width:34px;height:34px;border-radius:50%;border:1px solid #8799dc;position:relative;box-shadow:0 0 25px #8497ed35 }
+    .orb:before,.orb:after { content:"";position:absolute;inset:6px;border:1px solid #aab8ff;border-radius:50%;transform:scaleX(1.35) }
+    .orb:after { transform:scaleY(.58) }
+    .tag { color:var(--muted);font-size:12px;letter-spacing:.08em }
+    .hero { max-width:680px;margin-bottom:30px }
+    .eyebrow { color:var(--accent);font-size:11px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:14px }
+    h1 { font-size:clamp(34px,6vw,60px);line-height:1.04;letter-spacing:-.045em;margin:0 0 16px;font-weight:550 }
+    .hero p { color:var(--muted);line-height:1.7;margin:0;max-width:590px }
+    .grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px }
+    .track { background:linear-gradient(145deg,#1a202b,#12151c);border:1px solid var(--line);border-radius:20px;padding:19px;min-width:0;transition:border-color .2s,transform .2s }
+    .track.selected { border-color:#a9b8ff;box-shadow:0 0 0 1px #a9b8ff20,0 15px 40px #0002 }
+    .tracktop { display:flex;gap:14px;align-items:center;margin-bottom:17px }
+    .art { width:62px;height:62px;border-radius:15px;display:grid;place-items:center;flex-shrink:0;background:linear-gradient(135deg,#343e5b,#171b26);color:#dce2ff }
+    .art svg { width:33px;height:33px }
+    h2 { margin:0 0 5px;font-size:16px;font-weight:600 }
+    .desc { color:var(--muted);font-size:12px;line-height:1.5 }
+    audio { width:100%;height:34px;margin:0 0 14px;filter:invert(.88) hue-rotate(180deg) saturate(.55) }
+    .actions { display:flex;gap:9px;flex-wrap:wrap }
+    button { border:1px solid #3a4355;background:#222936;color:var(--text);border-radius:999px;padding:10px 14px;font:inherit;font-size:12px;cursor:pointer }
+    button.primary { background:var(--accent);border-color:var(--accent);color:#121522;font-weight:650 }
+    button:hover { filter:brightness(1.1) }
+    button:focus-visible { outline:2px solid white;outline-offset:3px }
+    .status { margin-top:22px;padding:17px 19px;border:1px solid var(--line);background:#131720;border-radius:16px;display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap }
+    .status strong { display:block;font-size:13px;margin-bottom:5px }
+    .status p { color:var(--muted);font-size:12px;line-height:1.5;margin:0 }
+    .status code { color:var(--accent2);overflow-wrap:anywhere }
+    .note { margin-top:26px;color:#80899a;font-size:12px;line-height:1.65 }
+    footer { margin-top:38px;border-top:1px solid var(--line);padding-top:18px;color:#737d8f;font-size:11px;letter-spacing:.06em;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap }
+    @media(max-width:650px) { .grid{grid-template-columns:1fr} header{margin-bottom:32px} .wrap{padding-top:24px} }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <div class="brand"><span class="orb" aria-hidden="true"></span> ORION</div>
+      <div class="tag">CLOCK EXPERIENCE / AUDIO</div>
+    </header>
+
+    <section class="hero">
+      <div class="eyebrow">Repertório de despertar</div>
+      <h1>Escolha como<br>o seu dia começa.</h1>
+      <p>Quatro experiências sonoras para o ORION. Ouça uma prévia, escolha seu alarme e copie o endereço do áudio para configurar o dispositivo.</p>
+    </section>
+
+    <section class="grid" id="tracks" aria-label="Biblioteca de alarmes"></section>
+
+    <section class="status" aria-live="polite">
+      <div>
+        <strong id="selectedTitle">Nenhum alarme selecionado</strong>
+        <p id="selectedUrl">Escolha uma faixa acima para ver o endereço direto do arquivo.</p>
+      </div>
+      <button id="copyUrl" class="primary" disabled>Copiar URL do MP3</button>
+    </section>
+
+    <p class="note">
+      <strong>Importante:</strong> esta página é uma biblioteca estática hospedável no GitHub Pages.
+      A seleção aqui não envia comandos ao ESP32 automaticamente. Para isso, o firmware precisa expor
+      uma forma de comunicação (por exemplo, uma API local no dispositivo) e ser integrado a esta página.
+      Os arquivos MP3 devem estar no repositório ou em uma hospedagem pública que permita acesso direto.
+    </p>
+
+    <footer><span>ORION · AUDIO LIBRARY</span><span>MADE FOR A QUIETER MORNING</span></footer>
+  </main>
+
+  <script>
+    // Troque os nomes e caminhos pelos arquivos MP3 reais.
+    // Para GitHub Pages de projeto, mantenha os caminhos relativos como "audio/arquivo.mp3".
+    const tracks = [
+      { id: "alarm-01", title: "Amanhecer", description: "Um início suave e luminoso.", file: "audio/alarme-01.mp3" },
+      { id: "alarm-02", title: "Ondulações", description: "Uma atmosfera calma e envolvente.", file: "audio/alarme-02.mp3" },
+      { id: "alarm-03", title: "Horizonte", description: "Uma chamada tranquila para despertar.", file: "audio/alarme-03.mp3" },
+      { id: "alarm-04", title: "Novo dia", description: "Energia serena para começar.", file: "audio/alarme-04.mp3" }
+    ];
+
+    const icon = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"><path d="M3 12c3-7 6 7 9 0s6 7 9 0"/><path d="M3 16c3-7 6 7 9 0s6 7 9 0" opacity=".5"/></svg>`;
+    const root = document.getElementById("tracks");
+    const title = document.getElementById("selectedTitle");
+    const urlText = document.getElementById("selectedUrl");
+    const copyButton = document.getElementById("copyUrl");
+    let selected = null;
+
+    // Resolve URL com o caminho de publicação atual do site.
+    function audioUrl(file) {
+      return new URL(file, window.location.href).href;
+    }
+
+    function render() {
+      root.innerHTML = tracks.map(track => {
+        const url = audioUrl(track.file);
+        return `<article class="track" data-id="${track.id}">
+          <div class="tracktop">
+            <div class="art" aria-hidden="true">${icon}</div>
+            <div><h2>${track.title}</h2><div class="desc">${track.description}</div></div>
+          </div>
+          <audio controls preload="none" src="${url}" aria-label="Prévia: ${track.title}"></audio>
+          <div class="actions">
+            <button class="primary" type="button" data-select="${track.id}">Selecionar alarme</button>
+            <button type="button" data-copy="${track.id}">Copiar endereço</button>
+          </div>
+        </article>`;
+      }).join("");
+    }
+
+    function selectTrack(id) {
+      selected = tracks.find(track => track.id === id) || null;
+      document.querySelectorAll(".track").forEach(card => {
+        card.classList.toggle("selected", card.dataset.id === id);
+      });
+      if (!selected) return;
+      title.textContent = `Selecionado: ${selected.title}`;
+      urlText.innerHTML = `<code>${audioUrl(selected.file)}</code>`;
+      copyButton.disabled = false;
+    }
+
+    async function copyText(text, button) {
+      try {
+        await navigator.clipboard.writeText(text);
+        const old = button.textContent;
+        button.textContent = "Copiado!";
+        setTimeout(() => button.textContent = old, 1400);
+      } catch {
+        window.prompt("Copie o endereço do áudio:", text);
+      }
+    }
+
+    root.addEventListener("click", event => {
+      const selectBtn = event.target.closest("[data-select]");
+      const copyBtn = event.target.closest("[data-copy]");
+      if (selectBtn) selectTrack(selectBtn.dataset.select);
+      if (copyBtn) {
+        const track = tracks.find(item => item.id === copyBtn.dataset.copy);
+        if (track) copyText(audioUrl(track.file), copyBtn);
+      }
+    });
+
+    copyButton.addEventListener("click", () => {
+      if (selected) copyText(audioUrl(selected.file), copyButton);
+    });
+
+    render();
+  </script>
+</body>
+</html>
